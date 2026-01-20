@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+
+# Bun lockfile
+bun.lockb
+
+# Output
+out/
+dist/
+build/
+*.tgz
+
+# Code coverage
+coverage/
+*.lcov
+
+# Logs
+logs/
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Environment files (contain API keys - NEVER commit!)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IDEs
+.idea/
+.vscode/
+.cursor/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reference SDKs (external repos cloned for development)
+public-sdks/

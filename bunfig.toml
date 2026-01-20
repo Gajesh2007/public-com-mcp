@@ -1,0 +1,3 @@
+[test]
+# Only run tests in our test folder, not in public-sdks
+root = "./test"
