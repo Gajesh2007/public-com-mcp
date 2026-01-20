@@ -1,21 +1,56 @@
 {
   "name": "public-com-mcp",
   "version": "1.0.0",
-  "description": "MCP Server for Public.com stock and options data",
-  "module": "src/index.ts",
+  "description": "MCP Server for Public.com stock and options trading APIs",
   "type": "module",
-  "private": true,
+  "main": "dist/index.js",
+  "bin": {
+    "public-com-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --hot run src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target node --format esm && node -e \"const fs=require('fs');const f='dist/index.js';fs.writeFileSync(f,'#!/usr/bin/env node\\n'+fs.readFileSync(f,'utf8').replace(/^#!.*\\n/,''))\"",
+    "prepublishOnly": "bun run build",
     "test": "bun test"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "public-com",
+    "stocks",
+    "options",
+    "trading",
+    "market-data",
+    "ai",
+    "claude",
+    "llm"
+  ],
+  "author": "Gajesh Naik",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gajesh2007/public-com-mcp.git"
+  },
+  "homepage": "https://github.com/Gajesh2007/public-com-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/Gajesh2007/public-com-mcp/issues"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^20"
   },
   "peerDependencies": {
     "typescript": "^5"

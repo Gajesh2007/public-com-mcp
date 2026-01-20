@@ -12,23 +12,30 @@ An MCP (Model Context Protocol) server that provides AI assistants with access t
 
 ## Prerequisites
 
-- [Bun](https://bun.sh) runtime
+- Node.js 18+ or [Bun](https://bun.sh) runtime
 - Public.com account with API access
 - API secret key from [Public.com Settings](https://public.com/settings/api)
 
 ## Installation
 
+### Via npm (recommended)
+
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/public-com-mcp.git
+npm install -g public-com-mcp
+```
+
+### Via npx (no install)
+
+```bash
+npx public-com-mcp
+```
+
+### From source
+
+```bash
+git clone https://github.com/Gajesh2007/public-com-mcp.git
 cd public-com-mcp
-
-# Install dependencies
 bun install
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your API key
 ```
 
 ## Configuration
@@ -52,6 +59,36 @@ ENABLE_TRADING=false
 
 Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
+**Using npx (easiest):**
+```json
+{
+  "mcpServers": {
+    "public-stocks": {
+      "command": "npx",
+      "args": ["public-com-mcp"],
+      "env": {
+        "PUBLIC_API_SECRET_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+**Using global install:**
+```json
+{
+  "mcpServers": {
+    "public-stocks": {
+      "command": "public-com-mcp",
+      "env": {
+        "PUBLIC_API_SECRET_KEY": "your-api-key"
+      }
+    }
+  }
+}
+```
+
+**Using Bun (from source):**
 ```json
 {
   "mcpServers": {
@@ -66,7 +103,13 @@ Add to your Claude Desktop config (`~/Library/Application Support/Claude/claude_
 ### Standalone
 
 ```bash
-# Run the MCP server
+# Via npx
+npx public-com-mcp
+
+# Via global install
+public-com-mcp
+
+# From source with Bun
 bun run src/index.ts
 ```
 
@@ -75,6 +118,9 @@ bun run src/index.ts
 ```bash
 # Run with hot reload
 bun run dev
+
+# Build for distribution
+bun run build
 
 # Run tests
 bun test
