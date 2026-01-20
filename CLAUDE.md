@@ -1,111 +1,83 @@
----
-description: Use Bun instead of Node.js, npm, pnpm, or vite.
-globs: "*.ts, *.tsx, *.html, *.css, *.js, *.jsx, package.json"
-alwaysApply: false
----
+# Public.com MCP Server - Development Guidelines
 
-Default to using Bun instead of Node.js.
+## Runtime
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Bun automatically loads .env, so don't use dotenv.
+Use Bun instead of Node.js:
+- `bun run src/index.ts` to start the server
+- `bun test` to run integration tests
+- `bun install` for dependencies
+- Bun automatically loads `.env` - don't use dotenv
 
-## APIs
+## Project Structure
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+```
+src/
+├── index.ts          # Entry point (stdio transport)
+├── server.ts         # MCP server configuration
+├── client/
+│   ├── types.ts      # TypeScript type definitions
+│   ├── auth.ts       # API token management
+│   └── public-api.ts # HTTP client for Public.com
+├── tools/
+│   ├── market-data.ts # Quote & instrument tools
+│   ├── options.ts     # Options chain & Greeks
+│   ├── account.ts     # Portfolio & history
+│   └── orders.ts      # Order placement (guarded)
+└── schemas/
+    └── index.ts       # Zod validation schemas
+```
 
-## Testing
+## Key Patterns
 
-Use `bun test` to run tests.
+### Tool Registration
 
-```ts#index.test.ts
-import { test, expect } from "bun:test";
-
-test("hello world", () => {
-  expect(1).toBe(1);
+Tools are registered in `src/server.ts` using MCP SDK:
+```typescript
+server.tool("tool_name", "description", schema, async (args) => {
+  // handler
+  return { content: [{ type: "text", text: JSON.stringify(result) }] };
 });
 ```
 
-## Frontend
+### Safety Guards
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
-
-Server:
-
-```ts#index.ts
-import index from "./index.html"
-
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
+Order tools check `ENABLE_TRADING=true` before executing:
+```typescript
+function assertTradingEnabled(): void {
+  if (process.env.ENABLE_TRADING !== "true") {
+    throw new Error("Trading is disabled");
   }
-})
-```
-
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
-
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
-
-With the following `frontend.tsx`:
-
-```tsx#frontend.tsx
-import React from "react";
-
-// import .css files directly and it works
-import './index.css';
-
-import { createRoot } from "react-dom/client";
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
 }
-
-root.render(<Frontend />);
 ```
 
-Then, run index.ts
+### Auth Flow
 
-```sh
-bun --hot ./index.ts
+Public.com uses token exchange:
+1. API secret → `/userapiauthservice/personal/access-tokens` → access token
+2. Access token used as Bearer for all requests
+3. Auto-refresh before expiry (5-min buffer)
+
+## Testing
+
+Integration tests require a valid API key in `.env`:
+```bash
+bun test
 ```
 
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+To test MCP protocol via stdio:
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}}}' | bun run src/index.ts
+```
+
+## API Reference
+
+- Base URL: `https://api.public.com`
+- Postman collection: https://github.com/public-com/postman-collections
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PUBLIC_API_SECRET_KEY` | Yes | API key from public.com/settings/api |
+| `PUBLIC_DEFAULT_ACCOUNT_ID` | No | Default account (use get_accounts to find) |
+| `ENABLE_TRADING` | No | Set "true" to enable order placement |
