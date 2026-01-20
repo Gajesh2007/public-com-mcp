@@ -18,7 +18,7 @@ An MCP (Model Context Protocol) server that provides AI assistants with access t
 
 ## Installation
 
-### Via npm (recommended)
+### Via npm
 
 ```bash
 npm install -g public-com-mcp
